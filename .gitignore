@@ -1,0 +1,14 @@
+# Environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# Secrets / local config
+.env

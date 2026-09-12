@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="410" viewBox="0 0 1200 410" role="img" aria-labelledby="title desc">
+  <title id="title">TCL IR wake flow</title>
+  <desc id="desc">Windows input wakes the display. If the TCL display is active, infrared is skipped. If it is inactive after a long off period, infrared power is sent before HDMI recovery.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0 0 9 4.5 0 9z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="410" rx="16" fill="#fff" stroke="#dbe2ea"/>
+  <text x="48" y="53" fill="#172033" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="600">How automatic wake works</text>
+
+  <g font-family="Segoe UI,Arial,sans-serif">
+    <g fill="#f8fafc" stroke="#cbd5e1">
+      <rect x="48" y="112" width="208" height="104" rx="10"/>
+      <rect x="314" y="112" width="208" height="104" rx="10"/>
+      <rect x="580" y="112" width="208" height="104" rx="10"/>
+      <rect x="846" y="82" width="306" height="82" rx="10"/>
+      <rect x="846" y="208" width="306" height="82" rx="10"/>
+      <rect x="580" y="322" width="306" height="58" rx="10"/>
+    </g>
+
+    <g fill="#172033" font-size="16" text-anchor="middle">
+      <text x="152" y="153" font-weight="600">Keyboard or mouse</text>
+      <text x="152" y="180" fill="#64748b" font-size="14">Windows wakes the display</text>
+
+      <text x="418" y="153" font-weight="600">Display-on event</text>
+      <text x="418" y="180" fill="#64748b" font-size="14">No input polling</text>
+
+      <text x="684" y="153" font-weight="600">Is the TCL display active?</text>
+      <text x="684" y="180" fill="#64748b" font-size="14">Checked before IR transmission</text>
+
+      <text x="999" y="116" font-weight="600">Yes — skip IR</text>
+      <text x="999" y="141" fill="#64748b" font-size="14">The TV is already available</text>
+
+      <text x="999" y="242" font-weight="600">No — send IR power</text>
+      <text x="999" y="267" fill="#64748b" font-size="14">Only after the configured off time</text>
+
+      <text x="733" y="357" font-weight="600">Restore the Windows display and HDMI</text>
+    </g>
+  </g>
+
+  <g fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)">
+    <path d="M256 164h47"/>
+    <path d="M522 164h47"/>
+    <path d="M788 148h47"/>
+    <path d="M788 181h27v68h20"/>
+    <path d="M999 164v145H733v2"/>
+    <path d="M999 290v19H886"/>
+  </g>
+</svg>
