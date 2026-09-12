@@ -76,8 +76,8 @@ class WakeControllerTests(unittest.TestCase):
         controller.display_changed(DISPLAY_DIMMED, now=150, input_age=None)
         self.assertTrue(controller.display_changed(DISPLAY_ON, now=195, input_age=0)[0])
 
-    def test_default_waits_eleven_minutes_before_ir(self):
-        self.assertEqual(parse_args([]).min_off_seconds, 660)
+    def test_default_waits_for_tv_standby_before_ir(self):
+        self.assertEqual(parse_args([]).min_off_seconds, 610)
 
 
 if __name__ == "__main__":

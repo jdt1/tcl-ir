@@ -413,8 +413,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--min-off-seconds",
         type=float,
-        default=660.0,
-        help="minimum display-off time before a display-on event may send Power (default 660)",
+        default=610.0,
+        help="minimum display-off time before a display-on event may send Power (default 610)",
     )
     parser.add_argument(
         "--recent-input-seconds",

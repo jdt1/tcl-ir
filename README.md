@@ -75,8 +75,8 @@ The task starts at interactive logon and survives reboots. To remove it:
 
 - Listens for Windows display power events; it does not poll or record input.
 - Requires recent keyboard or mouse input after a display-off period.
-- During the first 11 minutes after display-off, it restores HDMI without IR.
-- After 11 minutes, when the TV should be in standby, it may send IR power.
+- For 10 minutes after display-off, it restores HDMI without IR.
+- Ten seconds after the TV's standby timeout, it may send IR power.
 - Sends at most one power command per display-off cycle.
 - Restores the Windows display and restarts only the TCL monitor device if the
   HDMI path remains inactive.

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="590" viewBox="0 0 900 590" role="img" aria-labelledby="title desc">
   <title id="title">Automatic TV wake flow</title>
-  <desc id="desc">Windows receives keyboard or mouse input after the display has been off. Before eleven minutes it restores HDMI without infrared. After eleven minutes it sends infrared power before restoring HDMI.</desc>
+  <desc id="desc">Windows receives keyboard or mouse input after the display has been off. Before the television's ten-minute standby timeout it restores HDMI without infrared. After standby it sends infrared power before restoring HDMI.</desc>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0 0 8 4 0 8z" fill="#64748b"/>
@@ -24,11 +24,11 @@
     <text x="450" y="393" fill="#172033" font-size="16" font-weight="600">display off?</text>
 
     <rect x="55" y="478" width="330" height="76" rx="9" fill="#f8fafc" stroke="#cbd5e1"/>
-    <text x="220" y="508" fill="#172033" font-size="16" font-weight="600">Under 11 minutes</text>
+    <text x="220" y="508" fill="#172033" font-size="16" font-weight="600">Before TV standby</text>
     <text x="220" y="533" fill="#64748b" font-size="13">Restore HDMI without IR</text>
 
     <rect x="515" y="478" width="330" height="76" rx="9" fill="#f8fafc" stroke="#cbd5e1"/>
-    <text x="680" y="508" fill="#172033" font-size="16" font-weight="600">11 minutes or longer</text>
+    <text x="680" y="508" fill="#172033" font-size="16" font-weight="600">After TV standby</text>
     <text x="680" y="533" fill="#64748b" font-size="13">Send IR, wait for the TV, then restore HDMI</text>
   </g>
 
@@ -40,7 +40,7 @@
   </g>
 
   <g fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">
-    <text x="236" y="363">Under 11 min</text>
-    <text x="590" y="363">11 min or more</text>
+    <text x="233" y="363">Under 10m 10s</text>
+    <text x="586" y="363">10m 10s or more</text>
   </g>
 </svg>
