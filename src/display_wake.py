@@ -55,6 +55,18 @@ def wake_display() -> None:
     if not kernel32.SetThreadExecutionState(ES_DISPLAY_REQUIRED):
         raise ctypes.WinError(ctypes.get_last_error())
 
+    result = ctypes.c_size_t()
+    if not user32.SendMessageTimeoutW(
+        wt.HWND(HWND_BROADCAST),
+        WM_SYSCOMMAND,
+        SC_MONITORPOWER,
+        -1,
+        SMTO_ABORTIFHUNG,
+        2000,
+        ctypes.byref(result),
+    ):
+        raise ctypes.WinError(ctypes.get_last_error())
+
 
 def tcl_display_is_active() -> bool:
     """Return whether the TCL monitor is attached to an active desktop path."""
@@ -124,18 +136,6 @@ def recover_display(settle_seconds: float = 1.0) -> str:
     if not tcl_display_is_active():
         raise RuntimeError(f"TCL display remains inactive after restart: {restart_output}")
     return f"TCL display reactivated: {restart_output}"
-
-    result = ctypes.c_size_t()
-    if not user32.SendMessageTimeoutW(
-        wt.HWND(HWND_BROADCAST),
-        WM_SYSCOMMAND,
-        SC_MONITORPOWER,
-        -1,
-        SMTO_ABORTIFHUNG,
-        2000,
-        ctypes.byref(result),
-    ):
-        raise ctypes.WinError(ctypes.get_last_error())
 
 
 def main() -> int:

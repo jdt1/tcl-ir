@@ -5,13 +5,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from wake_monitor import (  # noqa: E402
-    DISPLAY_DIMMED,
-    DISPLAY_OFF,
-    DISPLAY_ON,
-    WakeController,
-    should_send_power,
-)
+from wake_monitor import DISPLAY_DIMMED, DISPLAY_OFF, DISPLAY_ON, WakeController, parse_args  # noqa: E402
 
 
 class WakeControllerTests(unittest.TestCase):
@@ -82,15 +76,8 @@ class WakeControllerTests(unittest.TestCase):
         controller.display_changed(DISPLAY_DIMMED, now=150, input_age=None)
         self.assertTrue(controller.display_changed(DISPLAY_ON, now=195, input_age=0)[0])
 
-    def test_power_is_skipped_when_display_is_active(self):
-        self.assertFalse(should_send_power(trigger_ir=True, display_active=True))
-
-    def test_power_is_skipped_when_display_status_is_unavailable(self):
-        self.assertFalse(should_send_power(trigger_ir=True, display_active=None))
-
-    def test_power_is_allowed_only_for_an_inactive_display(self):
-        self.assertTrue(should_send_power(trigger_ir=True, display_active=False))
-        self.assertFalse(should_send_power(trigger_ir=False, display_active=False))
+    def test_default_waits_eleven_minutes_before_ir(self):
+        self.assertEqual(parse_args([]).min_off_seconds, 660)
 
 
 if __name__ == "__main__":

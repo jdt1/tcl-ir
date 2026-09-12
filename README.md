@@ -55,14 +55,14 @@ Install the scheduled task from an elevated PowerShell. The default is a dry
 run: display recovery is active, but IR transmission is disabled.
 
 ```powershell
-& .\tools\install_wake_monitor.ps1 -MinOffSeconds 90
+& .\tools\install_wake_monitor.ps1
 Get-Content "$env:LOCALAPPDATA\tcl-ir\wake-monitor.log" -Wait
 ```
 
 After checking a complete display-off and wake cycle, enable IR:
 
 ```powershell
-& .\tools\install_wake_monitor.ps1 -Enable -MinOffSeconds 90
+& .\tools\install_wake_monitor.ps1 -Enable
 ```
 
 The task starts at interactive logon and survives reboots. To remove it:
@@ -75,8 +75,8 @@ The task starts at interactive logon and survives reboots. To remove it:
 
 - Listens for Windows display power events; it does not poll or record input.
 - Requires recent keyboard or mouse input after a display-off period.
-- Checks whether the TCL display is active before sending IR. If it is active,
-  IR is skipped.
+- During the first 11 minutes after display-off, it restores HDMI without IR.
+- After 11 minutes, when the TV should be in standby, it may send IR power.
 - Sends at most one power command per display-off cycle.
 - Restores the Windows display and restarts only the TCL monitor device if the
   HDMI path remains inactive.

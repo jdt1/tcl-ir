@@ -22,7 +22,7 @@ import threading
 import time
 import uuid
 
-from display_wake import recover_display, tcl_display_is_active
+from display_wake import recover_display
 
 
 DISPLAY_OFF = 0
@@ -41,11 +41,6 @@ CREATE_NO_WINDOW = 0x08000000
 
 GUID_SESSION_DISPLAY_STATUS = "2b84c20e-ad23-4ddf-93db-05ffbd7efca5"
 MUTEX_NAME = "Local\\tcl-ir-wake-monitor"
-
-
-def should_send_power(trigger_ir: bool, display_active: bool | None) -> bool:
-    """Return whether an IR power toggle is safe for this display-on event."""
-    return trigger_ir and display_active is False
 
 
 class WakeController:
@@ -288,20 +283,11 @@ def run_monitor(args: argparse.Namespace, logger: logging.Logger) -> int:
     def handle_wake(trigger_ir: bool, reason: str) -> None:
         try:
             if trigger_ir:
-                try:
-                    display_active: bool | None = tcl_display_is_active()
-                except (OSError, RuntimeError):
-                    display_active = None
-                    logger.exception("TCL display status unavailable; skipping IR power")
-
-                if display_active:
-                    logger.info("TCL display is already active; skipping IR power")
-                elif should_send_power(trigger_ir, display_active):
-                    if args.dry_run:
-                        logger.warning("DRY RUN: would send TCL power")
-                    elif send_power(repo_root, logger):
-                        logger.info("waiting %.1fs for TV startup", args.tv_startup_seconds)
-                        time.sleep(args.tv_startup_seconds)
+                if args.dry_run:
+                    logger.warning("DRY RUN: would send TCL power")
+                elif send_power(repo_root, logger):
+                    logger.info("waiting %.1fs for TV startup", args.tv_startup_seconds)
+                    time.sleep(args.tv_startup_seconds)
             try:
                 result = recover_display()
                 logger.info("display recovery succeeded: %s", result)
@@ -427,8 +413,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--min-off-seconds",
         type=float,
-        default=90.0,
-        help="minimum display-off time before a display-on event may send Power (default 90)",
+        default=660.0,
+        help="minimum display-off time before a display-on event may send Power (default 660)",
     )
     parser.add_argument(
         "--recent-input-seconds",

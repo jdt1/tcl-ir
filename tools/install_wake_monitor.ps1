@@ -2,7 +2,7 @@
 param(
     [switch]$Enable,
     [ValidateRange(0, 86400)]
-    [int]$MinOffSeconds = 90,
+    [int]$MinOffSeconds = 660,
     [ValidateRange(0, 300)]
     [int]$RecentInputSeconds = 5,
     [ValidateRange(0, 86400)]
