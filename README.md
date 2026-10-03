@@ -93,6 +93,43 @@ python .\tv.py power
 The core commands use timings captured from the Ocrustar TV-TCL 3407 profile.
 Additional commands printed by `--list` are marked as candidates.
 
+## Manual power shortcut
+
+`src/power_hotkey.py` listens for the PC keyboard's **Volume Down +
+Volume Up** buttons pressed together. It accepts overlapping presses or brief
+opposite-key pulses within 250 ms in either order, including events generated
+by keyboard software. Both pulses must complete within 35 ms each, matching
+this keyboard's combined-button pattern and rejecting ordinary separate taps.
+Separate taps that produce the exact same short-pulse pattern cannot be
+distinguished from a combined press.
+It sends `tv.py power` once, requires both
+buttons to be released before rearming, and applies a three-second
+cooldown. Transmission failures are logged without automatic retries. This
+listener runs separately from the automatic wake monitor.
+
+Install on the PC with the IR dongle, from PowerShell (no administrator access needed):
+
+```powershell
+& .\tools\install_power_hotkey.ps1
+```
+
+This starts in dry-run mode. Press both buttons together and check
+`%LOCALAPPDATA%\tcl-ir\power-hotkey.log` for a chord detection. Some keyboards
+do not report simultaneous media buttons; a dry run verifies your hardware.
+The usual Windows volume actions still occur. The listener only tracks
+these two button states and does not log other keystrokes.
+
+Enable actual Power transmission and startup at login:
+
+```powershell
+& .\tools\install_power_hotkey.ps1 -Enable
+```
+
+Power is a toggle, so the same shortcut turns the TV on or off. Windows must
+be awake and the interactive session unlocked. A wedged dongle still requires
+a physical replug. Remove the listener with
+`tools\uninstall_power_hotkey.ps1`.
+
 ## Troubleshooting
 
 - If the dongle is missing or the handshake times out, unplug and reconnect it.
