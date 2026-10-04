@@ -96,16 +96,15 @@ Additional commands printed by `--list` are marked as candidates.
 ## Manual power shortcut
 
 `src/power_hotkey.py` listens for the PC keyboard's **Volume Down +
-Volume Up** buttons pressed together. It accepts overlapping presses or brief
-opposite-key pulses within 250 ms in either order, including events generated
-by keyboard software. Both pulses must complete within 35 ms each, matching
-this keyboard's combined-button pattern and rejecting ordinary separate taps.
-Separate taps that produce the exact same short-pulse pattern cannot be
-distinguished from a combined press.
-It sends `tv.py power` once, requires both
-buttons to be released before rearming, and applies a three-second
-cooldown. Transmission failures are logged without automatic retries. This
-listener runs separately from the automatic wake monitor.
+Volume Up** buttons held together, using Windows Raw Input and the consumer
+HID descriptor. It requires both buttons to be active in the same device report;
+rapid separate taps do not trigger it. Ordinary synthesized keyboard events
+are ignored because they can lose the combined state on Logitech receivers.
+
+It sends `tv.py power` once, requires both buttons to be released before rearming,
+and applies a three-second cooldown. Transmission failures are logged without
+automatic retries. It runs separately from the automatic wake monitor and
+listens only to consumer-control HID input, not ordinary typing.
 
 Install on the PC with the IR dongle, from PowerShell (no administrator access needed):
 
@@ -114,16 +113,20 @@ Install on the PC with the IR dongle, from PowerShell (no administrator access n
 ```
 
 This starts in dry-run mode. Press both buttons together and check
-`%LOCALAPPDATA%\tcl-ir\power-hotkey.log` for a chord detection. Some keyboards
-do not report simultaneous media buttons; a dry run verifies your hardware.
+`%LOCALAPPDATA%\tcl-ir\power-hotkey.log` for a chord detection. The keyboard must expose both media buttons through
+consumer-control HID input; a dry run verifies your hardware.
 The usual Windows volume actions still occur. The listener only tracks
 these two button states and does not log other keystrokes.
 
-Enable actual Power transmission and startup at login:
+Enable actual Power transmission and startup at login (also after a reboot):
 
 ```powershell
 & .\tools\install_power_hotkey.ps1 -Enable
 ```
+
+The installer creates a shortcut in your Windows Startup folder pointing directly
+to `pythonw.exe`. The listener starts silently after you sign in; IR commands also
+run without a console window. It requires an interactive Windows session.
 
 Power is a toggle, so the same shortcut turns the TV on or off. Windows must
 be awake and the interactive session unlocked. A wedged dongle still requires
