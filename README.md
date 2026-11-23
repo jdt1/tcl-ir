@@ -6,6 +6,8 @@ path.
 
 ![Automatic wake flow](docs/architecture.svg)
 
+See the [one-page guide to TV control](output/pdf/tcl-tv-control.pdf) for the tested controls and Bluetooth findings.
+
 ## Requirements
 
 - Windows 11
@@ -146,3 +148,118 @@ Protocol attribution is documented in
 ## License
 
 [MIT](LICENSE)
+
+## Experimental Bluetooth version (2026-11-23)
+
+USB infrared controls volume on this TCL 43C61B and has woken the TV when Windows wakes its display. The experimental `tv_bluetooth.py` can advertise a Bluetooth Low Energy keyboard and remote from Windows.
+
+On 23 November, applying the Classic keyboard identity made THUIS visible in the TV's accessory picker. After confirmation on Windows, the TV paired over Classic and registered audio/media services. In a separate scan with Classic discovery off and LE advertising active, the TV could not find the remote. The TV subscribed to zero input reports. Bluetooth brightness and separate sleep/wake commands still need a working input connection. See the [test record](FINDINGS.md).
+
+Install the optional dependencies in the existing environment and start the
+helper (the commands below use `.venv`):
+
+```powershell
+& .\.venv\Scripts\python.exe -m pip install -r requirements-bluetooth.txt
+& .\.venv\Scripts\python.exe tv_bluetooth.py --probe
+& .\.venv\Scripts\python.exe tv_bluetooth.py --start
+& .\.venv\Scripts\python.exe tv_bluetooth.py --status
+```
+
+`--start` launches the Python executable directly with no console window. It
+keeps one HID provider alive across commands; it sends no keys and installs no
+startup task. Pair from **TV Settings → Remotes & Accessories → Pair accessory**.
+If THUIS is absent, pairing has failed at discovery; a `STARTED` status on the
+PC does not mean the TV can see it. Before sending input, `--status` must show a subscribed host. Some Windows pairing flows may require a PC-side confirmation.
+
+Only after pairing, try these individually and observe the actual TV effect:
+
+```powershell
+& .\.venv\Scripts\python.exe tv_bluetooth.py vol-
+& .\.venv\Scripts\python.exe tv_bluetooth.py brightness-
+& .\.venv\Scripts\python.exe tv_bluetooth.py off
+& .\.venv\Scripts\python.exe tv_bluetooth.py on
+```
+
+| Command | What it sends | What remains unknown |
+| --- | --- | --- |
+| `on` | Generic Desktop System Wake Up | Whether the TV receives Bluetooth input in standby and wakes |
+| `off` | Generic Desktop System Sleep | Whether TCL honors Android's sleep semantics |
+| `power` | Consumer Power | Toggle only; no state inference |
+| `brightness+` / `brightness-` | Consumer Display Brightness Increment/Decrement | Whether TCL changes the panel/backlight at all |
+| `home`, `back`, arrows, `ok`, `settings`, volume, media | Standard HID usages | TCL's handling of each usage |
+
+`on` and `off` use distinct HID codes; neither silently falls back to a toggle.
+They request wake/sleep, not mains power. HID offers no TV power/brightness
+readback and no supported `brightness 30` command here. Android brightness keys
+may be ignored or affect a different setting from TCL's picture backlight.
+Even with successful pairing, long standby, PC sleep/reboot, and reconnects need
+separate tests before replacing the existing IR automation.
+
+Use `--list` to inspect commands and `on off brightness- --dry-run` to print HID
+reports without touching Bluetooth. Input is sent to one subscribed host only;
+if multiple hosts subscribe, pass the TV's exact `device_id` from `--status`
+using `--target`. Missing/disconnected hosts fail without falling back to IR.
+Notifications mean delivery to the Bluetooth stack, not verified TV behavior.
+Each press is followed by a release, and failed commands are not retried.
+
+```powershell
+& .\.venv\Scripts\python.exe tv_bluetooth.py --stop
+```
+
+Logs and local authenticated-loopback connection state live under
+`%LOCALAPPDATA%\tcl-ir\bluetooth*`. Stop the helper when finished testing.
+Android hosts can require reconnecting or forgetting/re-pairing after a provider
+restart. The proven IR tool, hotkey, and wake monitor remain separate.
+
+### Try the Windows keyboard identity workaround
+
+Microsoft documents `COD Major` and `COD Type` overrides for Classic Bluetooth.
+`tools/bluetooth_identity.py` prepares a keyboard (`5`, `16`) or remote (`5`, `3`)
+identity, preserves the original two values, and can restore them. On the test PC both values were originally absent. Applying the keyboard profile and restarting the adapter changed the live class from Computer (`0x2E4104`) to Keyboard (`0x2E4540`).
+
+Inspect the exact plan without administrator access or any changes:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/bluetooth_identity.py keyboard
+```
+
+For the experiment, run the following through an administrator process:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/bluetooth_identity.py keyboard --apply
+```
+
+Then arrange a Bluetooth driver restart or reboot when interruption is acceptable.
+The TrackPoint keyboard and headphones use Bluetooth, so arrange an input fallback.
+The tool deliberately performs no restart. A simple radio toggle may not reload
+these settings. After activation, check the live radio, which needs no elevation:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/bluetooth_identity.py keyboard --verify
+```
+
+`matches: true` means its Classic major/minor bits are Keyboard (`0x0540`), with
+existing service bits ignored. Exit code `2` means it did not match: do not assume
+that a successful registry write changed the advertised identity. Older Windows
+experiments report quirks with these settings; current Windows 11 behavior needs
+this readback test.
+
+After verification, start the helper and open the TV's accessory picker. Confirm any Windows pairing dialog. Use `--status` to check for an HID input subscription. The completed Classic pairing on this TV yielded audio/media services only.
+
+Undo from an administrator process:
+
+```powershell
+& .\.venv\Scripts\python.exe tools/bluetooth_identity.py --restore
+```
+
+Arrange activation of the restored settings too. The backup remains at
+`%LOCALAPPDATA%\tcl-ir\bluetooth-identity-backup.json`; keep it until restoration
+is verified. Run apply/restore under the same Windows account so they use the same
+backup. Only the two named values are changed; the override is global to all
+radios using the Windows stack.
+
+If this fails, a dedicated USB Bluetooth adapter driven by **Bumble + WinUSB**
+can supply its own keyboard identity and HID profile while leaving the keyboard's
+existing radio under Windows. That is a separate untested backend, not an ordinary
+adapter plugged into the Windows stack. Research and primary references are in
+[FINDINGS.md](FINDINGS.md).
