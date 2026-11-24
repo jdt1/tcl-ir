@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$Enable)
+param([switch]$Enable, [switch]$LogitechReceiver)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -19,6 +19,12 @@ if (-not (Test-Path -LiteralPath $monitor -PathType Leaf)) {
     throw "Power hotkey listener was not found at $monitor"
 }
 $arguments = '"' + $monitor + '"'
+if ($LogitechReceiver) {
+    $python = Join-Path (Split-Path -Parent $pythonw) 'python.exe'
+    & $python -c 'import hid'
+    if ($LASTEXITCODE) { throw 'Install the hidapi package in the selected environment first.' }
+    $arguments += ' --logitech-receiver'
+}
 if (-not $Enable) { $arguments += ' --dry-run' }
 $shortcutPath = Join-Path ([Environment]::GetFolderPath('Startup')) 'TCL IR Power Hotkey.lnk'
 $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($shortcutPath)

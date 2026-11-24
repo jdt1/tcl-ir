@@ -4,6 +4,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 from power_hotkey import PowerChord
+from logitech_volume import volume_state
 from raw_media import split_hid_reports
 
 UP, DOWN = 0xE9, 0xEA
@@ -67,6 +68,19 @@ class PowerChordTests(unittest.TestCase):
 
 
 class RawReportTests(unittest.TestCase):
+    def test_receiver_capture(self):
+        chord = PowerChord()
+        reports = ('03 e9 00 00 00', '03 e9 00 ea 00', '03 ea 00 e9 00',
+                   '03 ea 00 00 00', '03 00 00 00 00', '03 ea 00 e9 00')
+        triggered = [chord.update(SOURCE, volume_state(bytes.fromhex(report)), now)
+                     for now, report in enumerate(reports)]
+        self.assertEqual(triggered, [False, True, False, False, False, True])
+
+    def test_receiver_ignores_timeouts_and_unrelated_reports(self):
+        for report in ([], [3, 233], [1, 233, 0, 234, 0]):
+            self.assertIsNone(volume_state(report))
+        self.assertEqual(volume_state([3, 0xE2, 0, 0xE9, 1]), frozenset())
+
     def test_batched_reports_keep_order(self):
         reports = [bytes.fromhex('03 e9 00 ea 00'), bytes.fromhex('03 00 00 00 00')]
         payload = (5).to_bytes(4, 'little') + (2).to_bytes(4, 'little') + b''.join(reports)

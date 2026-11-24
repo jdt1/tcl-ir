@@ -129,9 +129,22 @@ to `pythonw.exe`. The listener starts silently after you sign in; IR commands al
 run without a console window. It requires an interactive Windows session.
 
 Power is a toggle, so the same shortcut turns the TV on or off. Windows must
-be awake and the interactive session unlocked. A wedged dongle still requires
+be awake and the interactive session unlocked for the default Raw Input mode. A wedged dongle still requires
 a physical replug. Remove the listener with
 `tools\uninstall_power_hotkey.ps1`.
+
+### Physical Logitech keyboard during Remote Desktop
+
+For a Logitech Unifying receiver with USB ID `046D:C52B`, select the direct receiver mode. It reads the receiver's media buttons while the Windows user stays signed in, including when the desktop moves to RDP. Press both volume buttons on the keyboard physically attached to the TV PC. The usual release requirement and three-second cooldown apply. The listener waits for the receiver to return after a USB disconnect.
+
+From the activated project environment in PowerShell:
+
+```powershell
+python -m pip install -r requirements.txt
+.\tools\install_power_hotkey.ps1 -Enable -LogitechReceiver
+```
+
+This replaces the current user's startup shortcut and starts one hidden listener. Omit `-Enable` for a dry run. Reinstall without `-LogitechReceiver` to use the original session-based shortcut with other keyboards.
 
 ## Troubleshooting
 

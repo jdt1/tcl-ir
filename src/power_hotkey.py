@@ -42,6 +42,8 @@ class PowerChord:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dry-run', action='store_true', help='log the chord without sending IR')
+    parser.add_argument('--logitech-receiver', action='store_true',
+                        help='read the physical Logitech C52B media buttons directly, including during RDP')
     parser.add_argument('--run-seconds', type=float, help='stop after this many seconds (dry-run only)')
     args = parser.parse_args()
     if sys.platform != 'win32':
@@ -53,14 +55,10 @@ def main() -> int:
     kernel32.CreateMutexW.argtypes = [ctypes.c_void_p, wt.BOOL, wt.LPCWSTR]
     kernel32.CreateMutexW.restype = wt.HANDLE
     kernel32.CloseHandle.argtypes = [wt.HANDLE]
-    ctypes.set_last_error(0)
-    mutex = kernel32.CreateMutexW(None, False, 'Local\\tcl-ir-power-hotkey')
-    if not mutex:
-        raise ctypes.WinError(ctypes.get_last_error())
-    if ctypes.get_last_error() == 183:
-        logger.error('another power-hotkey listener is already running')
-        kernel32.CloseHandle(mutex)
-        return 2
+    mutex_names = ['Local\\tcl-ir-power-hotkey']
+    if args.logitech_receiver:
+        # The physical receiver is shared by all sessions on this computer.
+        mutex_names.append('Global\\tcl-ir-logitech-power-hotkey')
 
     pending: queue.Queue[None] = queue.Queue(maxsize=1)
     busy = threading.Event()
@@ -88,16 +86,32 @@ def main() -> int:
             else:
                 logger.info('raw HID chord ignored: power transmission still in progress')
 
+    mutexes = []
     try:
+        for name in mutex_names:
+            ctypes.set_last_error(0)
+            mutex = kernel32.CreateMutexW(None, False, name)
+            if not mutex:
+                raise ctypes.WinError(ctypes.get_last_error())
+            exists = ctypes.get_last_error() == 183
+            mutexes.append(mutex)
+            if exists:
+                logger.error('another power-hotkey listener is already running')
+                return 2
         threading.Thread(target=transmit, daemon=True, name='tcl-power-hotkey').start()
         logger.info('starting raw HID Volume Down + Volume Up; dry_run=%s', args.dry_run)
-        RawMediaListener(logger).run(on_state, chord.remove_device, args.run_seconds)
+        if args.logitech_receiver:
+            from logitech_volume import listen
+            listen(logger, on_state, chord.remove_device, args.run_seconds)
+        else:
+            RawMediaListener(logger).run(on_state, chord.remove_device, args.run_seconds)
         return 0
     except Exception:
         logger.exception('power-hotkey listener failed')
         return 1
     finally:
-        kernel32.CloseHandle(mutex)
+        for mutex in mutexes:
+            kernel32.CloseHandle(mutex)
         logger.info('power-hotkey listener stopped')
 
 
